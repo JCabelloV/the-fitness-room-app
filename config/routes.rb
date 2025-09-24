@@ -7,11 +7,13 @@ Rails.application.routes.draw do
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
-
-  get "/users", to: "users#index"
-  get "users/new", to: "users#new", as: "new_user"
-
-  get "/users/:id", to: "users#show", as: "user"
+  # resources :users  Crea todas las direcciones de crud: Create, new , index, show, edit, destroy, create
+  #  get "/users", to: "users#index"
+  #  get "users/new", to: "users#new", as: "new_user"
+  #  post "/users", to: "users#create"
+  #  get "/users/:id", to: "users#show", as: "user"
+  #  get "/users/:id/edit", to: "users#edit", as: "edit_user"
+  resources :users
   # Defines the root path route ("/")
   # root "posts#index"
 end
