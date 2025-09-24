@@ -1,10 +1,11 @@
 class UsersController < ApplicationController
+  before_action :set_user, only: [ :show, :update, :edit ]
+
   def index
     @users = User.all
   end
 
   def show
-    @user = User.find(params[:id])
   end
 
   def new
@@ -21,8 +22,23 @@ class UsersController < ApplicationController
     if @user.save
       redirect_to user_path(@user)
     else
-      render :new
+      redirect_to new_user_path, alert: @user.errors.full_message
     end
+  end
+
+  def edit
+  end
+
+  def update
+    if @user.update user_params
+      redirect_to user_path(@user), notice: "Usuario actualizado"
+    else
+      redirect_to edit_user_path(@user), alert: @user.errors.full_message
+    end
+  end
+
+  def set_user
+    @user = User.find(params[:id])
   end
 
   def user_params
