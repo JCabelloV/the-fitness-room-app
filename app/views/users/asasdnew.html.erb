@@ -1,0 +1,26 @@
+<h1>Crear usuario</h1>
+<%= form_with model: @user do |f| %>
+    <% if @user.errors.any? %>
+      <div>
+        <h2><%= pluralize(@user.errors.count, "error")%> No se puede generar por los </h2>
+        <ul>
+          <% @user.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+    
+  <div class="field">
+    <%= f.label :first_name %>
+    <%= f.text_field :first_name %>
+    <%= f.label :last_name %>
+    <%= f.text_field :last_name %>
+    <%= f.label :email %>
+    <%= f.text_field :email %>
+  </div>
+
+  <div class="actions">
+    <%= f.submit "Crear usuario" %>
+  </div>
+<% end %>
