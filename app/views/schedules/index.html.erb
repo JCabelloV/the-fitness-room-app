@@ -1,0 +1,197 @@
+
+<div class="schedules-fullcalendar">
+  <div class="calendar-controls">
+    <h1>Training Schedules</h1>
+    
+    <div class="filters">
+      <select id="trainer-filter" class="form-select">
+        <option value="">All Trainers</option>
+        <% if can? :manage, Schedule %>
+          <% Trainer.all.each do |trainer| %>
+            <option value="<%= trainer.id %>"><%= trainer.name %></option>
+          <% end %>
+        <% end %>
+      </select>
+
+      <select id="status-filter" class="form-select">
+        <option value="">All Statuses</option>
+        <% Schedule.statuses.keys.each do |status| %>
+          <option value="<%= status %>"><%= status.titleize %></option>
+        <% end %>
+      </select>
+
+      <%= link_to "New Schedule", new_schedule_path, class: "btn btn-primary", id: "new-schedule-btn" %>
+    </div>
+  </div>
+
+  <div id='calendar'></div>
+</div>
+
+<!-- Include FullCalendar from CDN -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    let calendar;
+
+    function getFilterParams() {
+      const trainerId = document.getElementById('trainer-filter')?.value;
+      const status = document.getElementById('status-filter')?.value;
+      
+      const params = new URLSearchParams();
+      if (trainerId) params.append('trainer_id', trainerId);
+      if (status) params.append('status', status);
+      
+      return params.toString();
+    }
+
+    function initCalendar() {
+      calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        slotMinTime: '06:00:00',
+        slotMaxTime: '22:00:00',
+        allDaySlot: false,
+        height: 'auto',
+        
+        events: function(info, successCallback, failureCallback) {
+          const params = getFilterParams();
+          const url = `/schedules.json?from=${info.startStr}&to=${info.endStr}&${params}`;
+          
+          fetch(url)
+            .then(response => response.json())
+            .then(data => {
+              const events = data.map(schedule => ({
+                id: schedule.id,
+                title: `${schedule.trainer.name} - ${schedule.user.name}`,
+                start: schedule.starts_at,
+                end: schedule.ends_at,
+                backgroundColor: getStatusColor(schedule.status),
+                borderColor: getStatusColor(schedule.status),
+                extendedProps: {
+                  location: schedule.location,
+                  status: schedule.status,
+                  notes: schedule.notes,
+                  trainer: schedule.trainer,
+                  user: schedule.user
+                }
+              }));
+              successCallback(events);
+            })
+            .catch(error => {
+              console.error('Error loading events:', error);
+              failureCallback(error);
+            });
+        },
+
+        eventClick: function(info) {
+          window.location.href = `/schedules/${info.event.id}`;
+        },
+
+        eventDidMount: function(info) {
+          // Add tooltip
+          const props = info.event.extendedProps;
+          let tooltipContent = `
+            <strong>${info.event.title}</strong><br>
+            Time: ${formatTime(info.event.start)} - ${formatTime(info.event.end)}<br>
+            Status: ${props.status}
+          `;
+          if (props.location) {
+            tooltipContent += `<br>Location: ${props.location}`;
+          }
+          
+          info.el.setAttribute('title', tooltipContent);
+        },
+
+        dateClick: function(info) {
+          // Optional: redirect to new schedule form with pre-filled date
+          window.location.href = `/schedules/new?starts_at=${info.dateStr}`;
+        }
+      });
+
+      calendar.render();
+    }
+
+    function getStatusColor(status) {
+      const colors = {
+        'pending': '#ffc107',
+        'confirmed': '#28a745',
+        'cancelled': '#dc3545',
+        'completed': '#6c757d'
+      };
+      return colors[status] || '#007bff';
+    }
+
+    function formatTime(date) {
+      return new Date(date).toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    }
+
+    // Initialize calendar
+    initCalendar();
+
+    // Refresh calendar when filters change
+    document.getElementById('trainer-filter')?.addEventListener('change', function() {
+      calendar.refetchEvents();
+    });
+
+    document.getElementById('status-filter')?.addEventListener('change', function() {
+      calendar.refetchEvents();
+    });
+  });
+</script>
+
+<style>
+  .schedules-fullcalendar {
+    padding: 20px;
+  }
+
+  .calendar-controls {
+    margin-bottom: 20px;
+  }
+
+  .calendar-controls h1 {
+    margin-bottom: 15px;
+  }
+
+  .filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .form-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: #007bff;
+    color: white;
+    border: none;
+  }
+
+  #calendar {
+    margin-top: 20px;
+  }
+
+  .fc-event {
+    cursor: pointer;
+  }
+</style>
