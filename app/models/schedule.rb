@@ -11,7 +11,7 @@ class Schedule < ApplicationRecord
 
   validates :starts_at, :ends_at, presence: true
 
-  priavte
+  private
 
   def ends_after_starts
     return if starts_at.blank? || ends_at.blank?

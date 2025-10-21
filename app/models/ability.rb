@@ -1,32 +1,31 @@
-# frozen_string_literal: true
-
 class Ability
   include CanCan::Ability
 
   def initialize(user)
-    # Define abilities for the user here. For example:
-    #
-    #   return unless user.present?
-    #   can :read, :all
-    #   return unless user.admin?
-    #   can :manage, :all
-    #
-    # The first argument to `can` is the action you are giving the user
-    # permission to do.
-    # If you pass :manage it will apply to every action. Other common actions
-    # here are :read, :create, :update and :destroy.
-    #
-    # The second argument is the resource the user can perform the action on.
-    # If you pass :all it will apply to every resource. Otherwise pass a Ruby
-    # class of the resource.
-    #
-    # The third argument is an optional hash of conditions to further filter the
-    # objects.
-    # For example, here the user can only update published articles.
-    #
-    #   can :update, Article, published: true
-    #
-    # See the wiki for details:
-    # https://github.com/CanCanCommunity/cancancan/blob/develop/docs/define_check_abilities.md
+    user ||= User.new # invitado
+
+    if user.respond_to?(:admin?) && user.admin?
+      can :manage, :all
+      return
+    end
+
+    # Reglas comunes para usuarios logueados
+    if user.persisted?
+      # Puede crear schedules (como cliente)
+      can :create, Schedule
+
+      # Puede ver/editar/eliminar sus propios schedules como cliente
+      can [ :read, :update, :destroy ], Schedule, user_id: user.id
+    end
+
+    # Si el usuario también es entrenador (ajusta a tu lógica real)
+    if user.respond_to?(:trainer?) && user.trainer?
+      can :read,   Schedule, trainer_id: user.id
+      can :update, Schedule, trainer_id: user.id
+      # decide si puede :destroy o :create también como entrenador
+    end
+
+    # Invitados (no logueados) — solo lectura pública si quieres
+    # can :read, Schedule, status: :confirmed
   end
 end
