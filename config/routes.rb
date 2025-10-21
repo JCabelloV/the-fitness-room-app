@@ -14,7 +14,9 @@ Rails.application.routes.draw do
   #  post "/users", to: "users#create"
   #  get "/users/:id", to: "users#show", as: "user"
   #  get "/users/:id/edit", to: "users#edit", as: "edit_user"
+
   resources :users
+  resources :schedules
 
   # Defines the root path route ("/")
   # root "posts#index"
