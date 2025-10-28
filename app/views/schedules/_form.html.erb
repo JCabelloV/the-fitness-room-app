@@ -1,0 +1,158 @@
+<div class="schedule-form">
+  <%= form_with(model: schedule, local: true) do |f| %>
+    <% if schedule.errors.any? %>
+      <div class="alert alert-danger">
+        <h4><%= pluralize(schedule.errors.count, "error") %> prohibited this schedule from being saved:</h4>
+        <ul>
+          <% schedule.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="form-card">
+      <div class="form-section">
+        <h3>👥 Participants</h3>
+        
+        <% if can? :manage, Schedule %>
+          <div class="form-group">
+            <%= f.label :user_id, "Member *", class: "form-label" %>
+            <%= f.collection_select :user_id, 
+                User.all, :id, :name, 
+                { prompt: "Select a member" }, 
+                { class: "form-control", required: true } %>
+          </div>
+        <% else %>
+          <%= f.hidden_field :user_id, value: current_user.id %>
+          <div class="form-group">
+            <label class="form-label">Member</label>
+            <div class="form-control-static"><%= current_user.first_name %></div>
+          </div>
+        <% end %>
+
+        <div class="form-group">
+          <%= f.label :trainer_id, "Trainer *", class: "form-label" %>
+          <%= f.collection_select :trainer_id, 
+              Trainer.all, :id, :first_name, 
+              { prompt: "Select a trainer" }, 
+              { class: "form-control", required: true } %>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>📅 Schedule</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <%= f.label :starts_at, "Start Date & Time *", class: "form-label" %>
+            <%= f.datetime_local_field :starts_at, 
+                class: "form-control", 
+                required: true,
+                value: schedule.starts_at&.strftime("%Y-%m-%dT%H:%M") || params[:starts_at] %>
+          </div>
+
+          <div class="form-group">
+            <%= f.label :ends_at, "End Date & Time *", class: "form-label" %>
+            <%= f.datetime_local_field :ends_at, 
+                class: "form-control", 
+                required: true,
+                value: schedule.ends_at&.strftime("%Y-%m-%dT%H:%M") %>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>ℹ️ Details</h3>
+        
+        <div class="form-group">
+          <%= f.label :status, "Status *", class: "form-label" %>
+          <%= f.select :status, 
+              Schedule.statuses.keys.map { |s| [s.titleize, s] },
+              {}, 
+              { class: "form-control", required: true } %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :location, "Location", class: "form-label" %>
+          <%= f.text_field :location, 
+              class: "form-control", 
+              placeholder: "e.g., Main Gym Floor, Studio A" %>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :price_cents, "Price (cents)", class: "form-label" %>
+          <div class="input-group">
+            <span class="input-addon">$</span>
+            <%= f.number_field :price_cents, 
+                class: "form-control", 
+                placeholder: "0",
+                step: 1,
+                min: 0 %>
+            <span class="input-addon-help">in cents (e.g., 5000 = $50.00)</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <%= f.label :notes, "Notes", class: "form-label" %>
+          <%= f.text_area :notes, 
+              class: "form-control", 
+              rows: 4,
+              placeholder: "Any additional information about this session..." %>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <%= f.submit schedule.new_record? ? "Create Schedule" : "Update Schedule", 
+            class: "btn btn-primary btn-lg" %>
+        <%= link_to "Cancel", 
+            schedule.new_record? ? schedules_path : schedule_path(schedule), 
+            class: "btn btn-secondary btn-lg" %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<style>
+  .schedule-form-container { padding: 20px; max-width: 900px; margin: 0 auto; }
+  .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+  .form-header h1 { margin: 0; }
+  .actions { display: flex; gap: 10px; }
+  
+  .alert { padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+  .alert-danger { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+  .alert h4 { margin: 0 0 10px 0; font-size: 16px; }
+  .alert ul { margin: 0; padding-left: 20px; }
+  
+  .schedule-form { background: white; }
+  .form-card { border: 1px solid #ddd; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .form-section { margin-bottom: 30px; padding-bottom: 30px; border-bottom: 1px solid #eee; }
+  .form-section:last-of-type { border-bottom: none; }
+  .form-section h3 { margin: 0 0 20px 0; color: #333; font-size: 18px; }
+  
+  .form-group { margin-bottom: 20px; }
+  .form-label { display: block; margin-bottom: 8px; font-weight: 600; color: #495057; }
+  .form-control { width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; }
+  .form-control:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 3px rgba(0,123,255,0.1); }
+  .form-control-static { padding: 10px 0; color: #333; }
+  
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+  
+  .input-group { position: relative; }
+  .input-addon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6c757d; font-weight: bold; }
+  .input-group .form-control { padding-left: 30px; }
+  .input-addon-help { display: block; margin-top: 5px; font-size: 12px; color: #6c757d; }
+  
+  .form-actions { display: flex; gap: 15px; margin-top: 30px; }
+  .btn { padding: 10px 20px; border-radius: 4px; text-decoration: none; display: inline-block; border: none; cursor: pointer; font-size: 14px; font-weight: 500; }
+  .btn-lg { padding: 12px 30px; font-size: 16px; }
+  .btn-primary { background: #007bff; color: white; }
+  .btn-primary:hover { background: #0056b3; }
+  .btn-secondary { background: #6c757d; color: white; }
+  .btn-secondary:hover { background: #545b62; }
+  
+  @media (max-width: 768px) {
+    .form-row { grid-template-columns: 1fr; }
+    .form-header { flex-direction: column; align-items: flex-start; }
+  }
+</style>

@@ -1,0 +1,8 @@
+<div class="schedule-form-container">
+  <div class="form-header">
+    <h1>New Training Session</h1>
+    <%= link_to "← Back to Calendar", schedules_path, class: "btn btn-secondary" %>
+  </div>
+
+  <%= render 'form', schedule: @schedule %>
+</div>

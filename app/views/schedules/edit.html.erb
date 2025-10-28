@@ -1,0 +1,12 @@
+<div class="schedule-form-container">
+  <div class="form-header">
+    <h1>Edit Training Session</h1>
+    <div class="actions">
+      <%= link_to "← Back", schedule_path(@schedule), class: "btn btn-secondary" %>
+      <%= link_to "Calendar", schedules_path, class: "btn btn-secondary" %>
+    </div>
+  </div>
+
+  <%= render 'form', schedule: @schedule %>
+</div>
+
