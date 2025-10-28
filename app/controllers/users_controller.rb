@@ -48,4 +48,7 @@ class UsersController < ApplicationController
       .require(:user)
       .permit(:first_name, :last_name, :email)
   end
+
+  def set_trainer # terminar
+  end
 end
